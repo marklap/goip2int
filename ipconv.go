@@ -34,23 +34,27 @@ var (
 	maxIPv6 = uint64(1<<64 - 1) // copied from standard lib math package constants (math.MaxUint64)
 )
 
-func ipv4ToUInt(ip net.IP) uint32 {
+// IPv4ToUInt converts an IPv4 address to the equivilent integer
+func IPv4ToUInt(ip net.IP) uint32 {
 	n := []byte(ip.To4())
 	return (uint32(n[0]) << 24) | (uint32(n[1]) << 16) | (uint32(n[2]) << 8) | uint32(n[3])
 }
 
-func uintToIPv4(n uint32) net.IP {
+// UintToIPv4 converts an integer into it's equivilent IPv4 address
+func UintToIPv4(n uint32) net.IP {
 	return net.IPv4(byte(n>>24), byte(n>>16), byte(n>>8), byte(n))
 }
 
-func ipv6ToUInts(ip net.IP) (network, host uint64) {
+// IPv6ToUInts converts an IPv6 address to the equivilent set of integers
+func IPv6ToUInts(ip net.IP) (network, host uint64) {
 	n := []byte(ip.To16())
 	network = (uint64(n[0]) << 56) | (uint64(n[1]) << 48) | (uint64(n[2]) << 40) | (uint64(n[3]) << 32) | (uint64(n[4]) << 24) | (uint64(n[5]) << 16) | (uint64(n[6]) << 8) | uint64(n[7])
 	host = (uint64(n[8]) << 56) | (uint64(n[9]) << 48) | (uint64(n[10]) << 40) | (uint64(n[11]) << 32) | (uint64(n[12]) << 24) | (uint64(n[13]) << 16) | (uint64(n[14]) << 8) | uint64(n[15])
 	return network, host
 }
 
-func uintsToIPv6(network, host uint64) net.IP {
+// UintsToIPv6 converts a pair of integers to an IPv6 address
+func UintsToIPv6(network, host uint64) net.IP {
 	var ip = make(net.IP, net.IPv6len)
 	ip[0] = byte(network >> 56)
 	ip[1] = byte(network >> 48)
@@ -71,7 +75,9 @@ func uintsToIPv6(network, host uint64) net.IP {
 	return ip
 }
 
-func ipv4NetStartEnd(ip net.IP, mask int) (start, end uint32) {
+// IPv4NetStartEnd determines the start and end IP address (represented in integers) based on an
+// IPv4 address and an IPv4 subnet mask in CIDR notation (eg. "192.168.1.1/24", `mask` is 24).
+func IPv4NetStartEnd(ip net.IP, mask int) (start, end uint32) {
 	switch {
 	case mask < 0:
 		return minIPv4, maxIPv4
@@ -79,7 +85,7 @@ func ipv4NetStartEnd(ip net.IP, mask int) (start, end uint32) {
 		return maxIPv4, maxIPv4
 	}
 
-	i := ipv4ToUInt(ip)
+	i := IPv4ToUInt(ip)
 	sm := uint32(maxIPv4 << uint32(32-mask))
 	em := ^sm
 
@@ -88,9 +94,10 @@ func ipv4NetStartEnd(ip net.IP, mask int) (start, end uint32) {
 	return start, end
 }
 
-func ipv6NetStartEnd(ip net.IP, mask int) (sNet, sHost, eNet, eHost uint64) {
+// IPv6NetStartEnd determines the start
+func IPv6NetStartEnd(ip net.IP, mask int) (sNet, sHost, eNet, eHost uint64) {
 
-	n, h := ipv6ToUInts(ip)
+	n, h := IPv6ToUInts(ip)
 
 	var subj, cMask uint64
 	switch {
