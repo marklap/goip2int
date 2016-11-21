@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"os"
 
-	"./ipconv"
+	"github.com/marklap/goip2int/ipconv"
 )
 
 const (
