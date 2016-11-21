@@ -24,12 +24,11 @@
 package main
 
 import (
-	"./ipconv"
 	"flag"
-	"math"
-	"math/big"
-	"net"
+	"fmt"
 	"os"
+
+	"./ipconv"
 )
 
 const (
@@ -42,92 +41,49 @@ const (
 )
 
 var (
-	fBigInt bool
-	fIPv6   bool
+	flagBigInt  bool
+	flagIPv6    bool
+	flagVersion bool
 )
 
 func init() {
-	flag.BoolVar(&fBigInt, "bigint", false, `(IPv6 ONLY) return "big" integers`)
-	flag.BoolVar(&fIPv6, "6", false, `Return IPv6 address if possible`)
+	flag.BoolVar(&flagIPv6, "6", false, "input argument is an IPv6 address")
+	flag.BoolVar(&flagBigInt, "big", false, "output a big int instead of a pair of 64 bit unsigned ints")
+	flag.BoolVar(&flagVersion, "version", false, "print the version and exit")
 	flag.Parse()
 }
 
-func determineMode(arg string) int {
-
-	return 0
-}
-
-func inspectIP(arg string) (net.IP, int) {
-	ip := net.ParseIP(arg)
-	if ip == nil {
-		return nil, 0
-	}
-
-	return ip, determineIPVersion(ip)
-}
-
-func arg2Int(arg string, reqType int) interface{} {
-	var i, max32, max64 = new(big.Int), new(big.Int), new(big.Int)
-	max32.SetUint64(uint64(math.MaxUint32))
-	max64.SetUint64(math.MaxUint64)
-
-	if i, success := i.SetString(arg, 10); !success {
-		return nil
-	}
-
-	switch reqType {
-	case t32:
-		if i.Cmp(max32) <= 0 {
-			return uint32(i.Uint64())
-		} else {
-			return uint32(0)
-		}
-	case t64:
-		if i.Cmp(max64) <= 0 {
-			return i.Uint64()
-		} else {
-			return uint64(0)
-		}
-	case tBig:
-		return i
-	}
+func mode(arg string) int {
+	return -1
 }
 
 func int2IP(arg string) string {
-
+	return ""
 }
 
 func ip2Int(arg string) string {
-	var res string
-
-	ip, ver := inspectIP(arg)
-	switch ver {
-	case 4:
-		return fmt.Sprintf("%s", ipconv.IPv4ToUInt(ip))
-	case 6:
-		network, host := ipconv.IPv6ToUints(ip)
-		if fBigInt {
-			return ipconv.UintsToBig(network, host).String()
-		} else {
-			return fmt.Sprintf("%d::%d", network, host)
-		}
-	}
+	return ""
 }
 
 func cidr2IPRange(arg string) string {
-
+	return ""
 }
 
 func main() {
-
 	if flag.NArg() == 0 {
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	var res string
+	if flagVersion {
+		fmt.Println(ipconv.Version)
+		os.Exit(0)
+	}
+
 	arg := flag.Arg(0)
-	switch determineMode(arg) {
+	switch mode(arg) {
+	case -1:
+		fmt.Println("Under Construction")
 	case mInt2IP:
 		fmt.Println(int2IP(arg))
 	case mIP2Int:

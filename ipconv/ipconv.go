@@ -28,6 +28,9 @@ import (
 	"net"
 )
 
+// Version is the version
+const Version = "0.1.0"
+
 var (
 	minIPv4 = uint32(0)
 	maxIPv4 = uint32(1<<32 - 1) // copied from standard lib math package constants (math.MaxUint32)
@@ -55,18 +58,18 @@ func IPv6ToUInts(ip net.IP) (network, host uint64) {
 }
 
 func uint64sToBig(left, right uint64) *big.Int {
-	l := big.NewInt(0).SetUint64(left)
-	r := big.NewInt(0).SetUint64(right)
-	o := big.NewInt(0)
+	l := new(big.Int).SetUint64(left)
+	r := new(big.Int).SetUint64(right)
+	o := new(big.Int)
 	o.Lsh(l, 64)
 	o.Or(o, r)
 	return o
 }
 
 func bigToUint64s(i *big.Int) (left, right uint64) {
-	m := big.NewInt(0).SetUint64(maxIPv6)
-	left = big.NewInt(0).Rsh(i, 64).Uint64()
-	right = big.NewInt(0).And(i, m).Uint64()
+	m := new(big.Int).SetUint64(maxIPv6)
+	left = new(big.Int).Rsh(i, 64).Uint64()
+	right = new(big.Int).And(i, m).Uint64()
 	return left, right
 }
 
@@ -172,7 +175,8 @@ func IPv6NetStartEndBig(ip net.IP, mask int) (start, end *big.Int) {
 	return start, end
 }
 
-func detectIPVersion(ip net.IP) int {
+// DetectIPVersion determines if the IP address is IPv4 or IPv6
+func DetectIPVersion(ip net.IP) int {
 	switch {
 	case ip.To4() != nil && ip.To16() != nil:
 		return 4
