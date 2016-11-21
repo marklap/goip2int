@@ -70,14 +70,14 @@ func cidr2IPRange(arg string) string {
 }
 
 func main() {
-	if flag.NArg() == 0 {
-		flag.Usage()
-		os.Exit(1)
-	}
-
 	if flagVersion {
 		fmt.Println(ipconv.Version)
 		os.Exit(0)
+	}
+
+	if flag.NArg() == 0 {
+		flag.Usage()
+		os.Exit(1)
 	}
 
 	arg := flag.Arg(0)
