@@ -50,7 +50,7 @@ func TestIPv6Conversion(t *testing.T) {
 	uNetWant, uHostWant := uint64(18279849776823276130), uint64(8002485518114779956)
 	bWant, _ := new(big.Int).SetString("337203710538915638676904557932570506036", 10)
 
-	if uNetGot, uHostGot := IPv6ToUInts(ipWant); uNetGot != uNetWant || uHostGot != uHostWant || bWant.Cmp(UintsToBig(uNetGot, uHostGot)) != 0 {
+	if uNetGot, uHostGot := IPv6ToUInts(ipWant); uNetGot != uNetWant || uHostGot != uHostWant || bWant.Cmp(IPv6ToBig(ipWant)) != 0 {
 		t.Errorf("Failed to convert IPv6 %s to correct uint64s - got %d::%d, want %d::%d", ipWant, uNetGot, uHostGot, uNetWant, uHostWant)
 	}
 
@@ -67,7 +67,7 @@ func TestIPv4Subnetting(t *testing.T) {
 	eUWant := uint32(3232261247)
 
 	if sUGot, eUGot := IPv4NetStartEnd(ipWant, mBits); sUGot != sUWant || eUGot != eUWant {
-		t.Errorf("Failed to convert IPv4 CIDR %s/%d into correct start and end uint32s - got %s-%s, want %s-%s", ipWant, mBits, sUWant, eUWant, sUGot, eUGot)
+		t.Errorf("Failed to convert IPv4 CIDR %s/%d into correct start and end uint32s - got %d-%d, want %d-%d", ipWant, mBits, sUWant, eUWant, sUGot, eUGot)
 	}
 }
 
@@ -87,8 +87,8 @@ func TestIPv6NetSubnetting(t *testing.T) {
 			sh == uSHostWant &&
 			en == uENetWant &&
 			eh == uEHostWant &&
-			bSWant.Cmp(UintsToBig(sn, sh)) == 0 &&
-			bEWant.Cmp(UintsToBig(en, eh)) == 0
+			bSWant.Cmp(uint64sToBig(sn, sh)) == 0 &&
+			bEWant.Cmp(uint64sToBig(en, eh)) == 0
 	}
 
 	if sn, sh, en, eh := IPv6NetStartEnd(ipWant, mBits); !eq(sn, sh, en, eh) {

@@ -24,6 +24,7 @@
 package ipconv
 
 import (
+	"math/big"
 	"net"
 )
 
@@ -34,23 +35,51 @@ var (
 	maxIPv6 = uint64(1<<64 - 1) // copied from standard lib math package constants (math.MaxUint64)
 )
 
-// IPv4ToUInt converts an IPv4 address to the equivilent integer
+// IPv4ToUInt converts an IPv4 address to the equivalent integer
 func IPv4ToUInt(ip net.IP) uint32 {
 	n := []byte(ip.To4())
 	return (uint32(n[0]) << 24) | (uint32(n[1]) << 16) | (uint32(n[2]) << 8) | uint32(n[3])
 }
 
-// UintToIPv4 converts an integer into it's equivilent IPv4 address
+// UintToIPv4 converts an integer into it's equivalent IPv4 address
 func UintToIPv4(n uint32) net.IP {
 	return net.IPv4(byte(n>>24), byte(n>>16), byte(n>>8), byte(n))
 }
 
-// IPv6ToUInts converts an IPv6 address to the equivilent set of integers
+// IPv6ToUInts converts an IPv6 address to the equivalent set of integers
 func IPv6ToUInts(ip net.IP) (network, host uint64) {
 	n := []byte(ip.To16())
 	network = (uint64(n[0]) << 56) | (uint64(n[1]) << 48) | (uint64(n[2]) << 40) | (uint64(n[3]) << 32) | (uint64(n[4]) << 24) | (uint64(n[5]) << 16) | (uint64(n[6]) << 8) | uint64(n[7])
 	host = (uint64(n[8]) << 56) | (uint64(n[9]) << 48) | (uint64(n[10]) << 40) | (uint64(n[11]) << 32) | (uint64(n[12]) << 24) | (uint64(n[13]) << 16) | (uint64(n[14]) << 8) | uint64(n[15])
 	return network, host
+}
+
+func uint64sToBig(left, right uint64) *big.Int {
+	l := big.NewInt(0).SetUint64(left)
+	r := big.NewInt(0).SetUint64(right)
+	o := big.NewInt(0)
+	o.Lsh(l, 64)
+	o.Or(o, r)
+	return o
+}
+
+func bigToUint64s(i *big.Int) (left, right uint64) {
+	m := big.NewInt(0).SetUint64(maxIPv6)
+	left = big.NewInt(0).Rsh(i, 64).Uint64()
+	right = big.NewInt(0).And(i, m).Uint64()
+	return left, right
+}
+
+// IPv6ToBig converts an IPv6 address to an equivalent `math.big.Int`
+func IPv6ToBig(ip net.IP) *big.Int {
+	network, host := IPv6ToUInts(ip)
+	return uint64sToBig(network, host)
+}
+
+// BigToIPv6 converts a `math.big.Int` into the equivalent IPv6 address
+func BigToIPv6(i *big.Int) net.IP {
+	n, h := bigToUint64s(i)
+	return UintsToIPv6(n, h)
 }
 
 // UintsToIPv6 converts a pair of integers to an IPv6 address
@@ -132,6 +161,15 @@ func IPv6NetStartEnd(ip net.IP, mask int) (sNet, sHost, eNet, eHost uint64) {
 		eHost = end
 	}
 	return sNet, sHost, eNet, eHost
+}
+
+// IPv6NetStartEndBig is the same as `IPv6NetStartEnd` except that it returns a pair of
+// `*math.big.Int` values instead of a 4-tuple of uint64
+func IPv6NetStartEndBig(ip net.IP, mask int) (start, end *big.Int) {
+	sn, sh, en, eh := IPv6NetStartEnd(ip, mask)
+	start = uint64sToBig(sn, sh)
+	end = uint64sToBig(en, eh)
+	return start, end
 }
 
 func detectIPVersion(ip net.IP) int {
